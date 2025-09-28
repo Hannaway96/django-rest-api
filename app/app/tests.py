@@ -12,25 +12,21 @@ class TestCalculator(SimpleTestCase):
         self.calculator = Calculator()
 
     def test_add_positive(self):
-        x = 2
-        y = 3
+        x, y = 2, 3
         answer = self.calculator.add(x, y)
         self.assertEqual(answer, 5)
 
     def test_add_negative(self):
-        x = 3
-        y = 2
+        x, y = 2, 3
         answer = self.calculator.add(x, y)
         self.assertNotEqual(answer, 9)
 
     def test_subtract_positive(self):
-        x = 5
-        y = 3
+        x, y = 5, 3
         answer = self.calculator.subtract(x, y)
         self.assertEqual(answer, 2)
 
     def test_subtract_negative(self):
-        x = 5
-        y = 3
+        x, y = 5, 3
         answer = self.calculator.subtract(x, y)
         self.assertNotEqual(answer, 9)
