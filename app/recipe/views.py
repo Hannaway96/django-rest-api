@@ -1,5 +1,5 @@
 """
-  Views for the Recipe API
+Views for the Recipe API
 """
 from rest_framework import (
     viewsets,
