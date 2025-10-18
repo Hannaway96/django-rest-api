@@ -1,7 +1,7 @@
 """
 Tests for the tags API
 """
-
+from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.test import TestCase
@@ -9,7 +9,10 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Tag
+from core.models import (
+    Tag,
+    Recipe
+)
 from recipe.serializers import TagSerialzer
 
 TAGS_URL = reverse('recipe:tag-list')
@@ -94,3 +97,44 @@ class PrivateTagsAPITest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         tags = Tag.objects.filter(user=self.user)
         self.assertFalse(tags.exists())
+
+    def test_filter_tags_assigned_to_recipes(self):
+        """Test filtering tags to those assigned to a recipe"""
+        tag1 = Tag.objects.create(user=self.user, name='Breakfast')
+        tag2 = Tag.objects.create(user=self.user, name='Lunch')
+        recipe = Recipe.objects.create(
+            user=self.user,
+            title="Green Eggs and Ham",
+            time_minutes=5,
+            price=Decimal("3.50")
+        )
+        recipe.tags.add(tag1)
+        res = self.client.get(TAGS_URL, {'assigned_only': 1})
+
+        s1 = TagSerialzer(tag1)
+        s2 = TagSerialzer(tag2)
+        self.assertIn(s1.data, res.data)
+        self.assertNotIn(s2.data, res.data)
+
+    def test_filtered_tags_unique(self):
+        """Test filtered tags return a unique list"""
+        tag = Tag.objects.create(user=self.user, name="Breakfast")
+        Tag.objects.create(user=self.user, name='Dinner')
+        recipe1 = Recipe.objects.create(
+            user=self.user,
+            title='Pancakes',
+            time_minutes=5,
+            price=Decimal('1.50')
+        )
+        recipe2 = Recipe.objects.create(
+            user=self.user,
+            title='Porridge',
+            time_minutes=5,
+            price=Decimal('1.50')
+        )
+        recipe1.tags.add(tag)
+        recipe1.tags.add(tag)
+
+        res = self.client.get(TAGS_URL, {'assigned_only': 1})
+
+        self.assertEqual(len(res.data), 1)
